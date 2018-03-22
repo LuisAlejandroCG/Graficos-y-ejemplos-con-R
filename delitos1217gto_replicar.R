@@ -68,7 +68,10 @@ str(d1217full)
 media_anual <- group_by(d1217full,año) %>%
 summarise(media=mean(total))
 media_anual
-
+		  
+media_mensual <- group_by(d1217full,mes) %>%
+summarise(media=mean(total))
+		  
 ##Gráfico
 d1217full %>%
 	select("año", "mes", "narcomenudeo" , "posesion", "total") %>%
@@ -80,7 +83,3 @@ d1217full %>%
     	theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
 	labs(x="", y="")
 	
-media_mensual <- group_by(d1217full,mes) %>%
-summarise(media=mean(total))
-
-##Gráfico
