@@ -2,60 +2,60 @@ library(tidyverse)
 
 
 ###Vector meses
-###Correr antes de ejecutar el cÛdigo del siguiente bloque
+###Correr antes de ejecutar el c√≥digo del siguiente bloque
 meses <- c("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre")
 
-##CÛdigo inicial
-##DespuÈs de indicar "ruta_del_usuario/nombre_archivo.csv", el archivo est· listo para correrse
+##C√≥digo inicial
+##Despu√©s de indicar "ruta_del_usuario/nombre_archivo.csv", el c√≥digo est√° listo para correrse
 d1217 <- read.csv("ruta_del_usuario/nombre_archivo.csv", header=T)%>%
 	filter(ENTIDAD=="GUANAJUATO" & ANO<2018& CONCEPTO != "OTRAS LEYES Y CODIGOS" & CONCEPTO !="OTROS DELITOS") %>% 
 	rename_all(tolower) %>%
 	select(-(2:5)) %>%
-	rename("aÒo"="ano") %>%
+	rename("a√±o"="ano") %>%
 	gather(clave, valor, 3:14)%>% 	##Crea las columnas "clave" y "valor" para los valores en las columnas 3:14
-	arrange(aÒo) %>%	
+	arrange(a√±o) %>%	
 	spread(tipo, valor)%>%			##Convierte "tipo" en columnas y les asigna los valores en "valor"	
 	rename("mes"="clave") %>%
-	mutate(mes= factor(mes, levels=meses)) %>%	##Cambiamos los niveles de la variable mes seg˙n el vector meses
+	mutate(mes= factor(mes, levels=meses)) %>%	##Cambiamos los niveles de la variable mes seg√∫n el vector meses
 	arrange(mes)%>%
-	arrange(aÒo) %>%
+	arrange(a√±o) %>%
 	rename_all(tolower) %>%
 	replace(is.na(.), 0) %>%		#Sustituye por ceros todos los valores con NA
-	mutate(pos = posesion+posesiÛn, prod= produccion+producciÛn, 
-	traf= trafico+tr·fico) %>%		#Teniendo ceros, ya podemos sumar columnas
+	mutate(pos = posesion+posesi√≥n, prod= produccion+producci√≥n, 
+	traf= trafico+tr√°fico) %>%		#Teniendo ceros, ya podemos sumar columnas
 	select(-(9:15)) %>%
 	rename_at(c(5, 7:8,10:12), function(x) c("narcomenudeo", "otros_lfcd", "otros_lgs",
 	"posesion","produccion","trafico")) %>%
 	mutate(total= rowSums(.[3:12]))
-##Fin del primer bloque de cÛdigo
+##Fin del primer bloque de c√≥digo
 
 head(d1217)		#Para verificar que el output sea el deseado
 
 
-##CALCULAR LOS DELITOS POR CADA 100 MIL HABITANTES PARA LOS DISTINTOS PERÕODOS
+##CALCULAR LOS DELITOS POR CADA 100 MIL HABITANTES PARA LOS DISTINTOS PER√çODOS
 
 ##Primero creamos los subconjuntos para 2012-14 y 2015-17
 
 ###2012-2014
-##FunciÛn 
-gto2010 <- 5486372 					#PoblaciÛn en 2010. Se utilizar· para el perÌodo 2012-14
-d100mil <- function(x) (x/gto2010)*100000		#FunciÛn para calcular delitos por cada 100 mil habitantes
-redondeo <- function(x) round(x,2)			#FunciÛn para redondear
+##Funci√≥n 
+gto2010 <- 5486372 					#Poblaci√≥n en 2010. Se utilizar√° para el per√≠odo 2012-14
+d100mil <- function(x) (x/gto2010)*100000		#Funci√≥n para calcular delitos por cada 100 mil habitantes
+redondeo <- function(x) round(x,2)			#Funci√≥n para redondear
 
-d1214 <- filter(d1217, aÒo<2015) %>% 
-	mutate(aÒo= factor(aÒo)) %>%			#Con esto evitamos que el mutate_if haga c·lculos sobre la variable "aÒo"
+d1214 <- filter(d1217, a√±o<2015) %>% 
+	mutate(a√±o= factor(a√±o)) %>%			#Con esto evitamos que el mutate_if haga c√°lculos sobre la variable "a√±o"
 	mutate_if(is.numeric, d100mil) %>%
 	mutate_if(is.numeric, redondeo)
 
 head(d1214)
 
 ###2015-2017
-##FunciÛn
+##Funci√≥n
 gto2015 <- 5853677
 d_100mil <- function(x) (x/gto2015)*100000
 
-d1517 <- filter(d1217, aÒo%in%c("2015","2016","2017")) %>%
-	mutate(aÒo=factor(aÒo))%>%
+d1517 <- filter(d1217, a√±o%in%c("2015","2016","2017")) %>%
+	mutate(a√±o=factor(a√±o))%>%
 	mutate_if(is.numeric, d_100mil)%>%
 	mutate_if(is.numeric, redondeo) 
 
@@ -64,16 +64,16 @@ d1217full <- rbind(d1214,d1517)
 head(d1217full)
 str(d1217full)
 
-##ExploraciÛn de estadÌsticos
-media_anual <- group_by(d1217full,aÒo) %>%
+##Exploraci√≥n de estad√≠sticos
+media_anual <- group_by(d1217full,a√±o) %>%
 summarise(media=mean(total))
 media_anual
 
 media_mensual <- group_by(d1217full,mes) %>%
 summarise(media=mean(total))
 
-##Gr·fico
+##Gr√°fico
 ##PENDIENTE
-##El gr·fico deseado debe mostrar los aÒos en intervalos discretos (2012/12, ..., 2017/12)
-##y mostrar una lÌnea correspondiente a cada variable numÈrica (variables 3:13)
+##El gr√°fico deseado debe mostrar los a√±os en intervalos discretos (2012/12, ..., 2017/12)
+##y mostrar una l√≠nea correspondiente a cada variable num√©rica (variables 3:13)
 
