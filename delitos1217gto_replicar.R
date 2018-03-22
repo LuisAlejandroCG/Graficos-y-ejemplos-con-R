@@ -69,11 +69,18 @@ media_anual <- group_by(d1217full,año) %>%
 summarise(media=mean(total))
 media_anual
 
+##Gráfico
+d1217full %>%
+	select("año", "mes", "narcomenudeo" , "posesion", "total") %>%
+    	mutate(order = paste0(as.character(año), "-",sprintf("%02d",which(meses %in% mes)))) %>%
+    	gather(variable, valor, -`año`, -mes, -order) %>%
+    	ggplot(aes(x=order,y=valor,colour=variable, group=variable)) +
+    	geom_line(size=1) +
+    	scale_x_discrete(breaks=unique(paste0(as.character(d1217full$año), "-12"))) +
+    	theme(axis.text.x = element_text(angle = 0, hjust = 1)) +
+	labs(x="", y="")
+	
 media_mensual <- group_by(d1217full,mes) %>%
 summarise(media=mean(total))
 
 ##Gráfico
-##PENDIENTE
-##El gráfico deseado debe mostrar los años en intervalos discretos (2012/12, ..., 2017/12)
-##y mostrar una línea correspondiente a cada variable numérica (variables 3:13)
-
