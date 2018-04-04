@@ -2,7 +2,7 @@ library(tidyverse)
 
 ##Breve script para calcular la tasa de mortalidad de niños menores de un año por cada mil nacidos vivos en Guanajuato (2012-2016)
 ##Se incluyen ejemplos de gráficos comparativos
-##Las bases de datos para replicar este script son "muertes" y "nacimientos"
+##Las bases de datos para replicar este script son "muertes" y "nacimientos" (disponibles aquí https://github.com/LuisAlejandroCG/proyecto_gto)
 ##Las BD se obtienen por separado del rubro "Registros administrativos" en http://www.inegi.org.mx/est/lista_cubos/
 
 ##Nacimientos
