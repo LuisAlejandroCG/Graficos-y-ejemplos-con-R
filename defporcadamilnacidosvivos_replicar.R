@@ -1,15 +1,15 @@
 library(tidyverse)
 
-##Breve script para calcular la tasa de mortalidad de niÒos menores de un aÒo por cada mil nacidos vivos en Guanajuato (2012-2016)
-##Se incluyen ejemplos de gr·ficos comparativos
+##Breve script para calcular la tasa de mortalidad de ni√±os menores de un a√±o por cada mil nacidos vivos en Guanajuato (2012-2016)
+##Se incluyen ejemplos de gr√°ficos comparativos
 ##Las bases de datos para replicar este script son "muertes" y "nacimientos"
 ##Las BD se obtienen por separado del rubro "Registros administrativos" en http://www.inegi.org.mx/est/lista_cubos/
 
 ##Nacimientos
 nac <- read.csv("ruta del usuario/nacimientos.csv", header=T) %>%
-	select(c(1,X2012:X2016)) %>% 
+	select(c(1,X2012:X2016)) %>%          #Se puede seleccionar por posici√≥n y por nombre de variable en la misma l√≠nea
 	rename_at(2:6, function(x) c("2012", "2013", "2014", "2015", "2016")) %>%
-	gather(aÒo, nacimientos, 2:6) %>%
+	gather(a√±o, nacimientos, 2:6) %>%
 	replace(is.na(.), 0) 
 
 str(nac)
@@ -18,14 +18,14 @@ str(nac)
 def <- read.csv("ruta del usuario/muertes.csv", header=T)%>%
 	select(-48) %>%
 	gather(municipio, defunciones, 2:47) %>%
-	filter(aÒo%in%c(2012:2016)) %>%
-	arrange(aÒo) %>%
+	filter(a√±o%in%c(2012:2016)) %>%
+	arrange(a√±o) %>%
 	replace(is.na(.), 0) %>%
 	mutate(defunciones=as.numeric(defunciones))
 
 str(def)
 
-##ExtracciÛn columna
+##Extracci√≥n columna
 defunciones <- def[,3]
 
 ##Base de datos final
@@ -35,16 +35,16 @@ fix(nac_mort)
 
 ##Plots
 ##Municipios del corredor industrial
-corredor <- filter(nac_mort, mpio%in%c("Celaya", "Irapuato", "LeÛn", "Salamanca")) %>%
-ggplot(aes(x=aÒo, y=defxmil, group=mpio))+
+corredor <- filter(nac_mort, mpio%in%c("Celaya", "Irapuato", "Le√≥n", "Salamanca")) %>%
+ggplot(aes(x=a√±o, y=defxmil, group=mpio))+
 geom_line(size=1.5) +
 facet_wrap(~mpio)
 corredor
 
 ##Municipios del noroeste
 noroeste <- filter(nac_mort, mpio%in%c("Atarjea", "Doctor Mora", "San Luis de la Paz", 
-"San JosÈ Iturbide", "Santa Catarina", "Tierra Blanca", "Victoria", "Xich˙")) %>%
-ggplot(aes(x=aÒo, y=defxmil, group=mpio))+
+"San Jos√© Iturbide", "Santa Catarina", "Tierra Blanca", "Victoria", "Xich√∫")) %>%
+ggplot(aes(x=a√±o, y=defxmil, group=mpio))+
 geom_line(size=1.5) +
 facet_wrap(~mpio)
 noroeste
