@@ -1,14 +1,14 @@
 ###ENIGH 2016: Estimaciones para el estado de Guanajuato
 ###La base se descarga de 
 ###http://www.beta.inegi.org.mx/contenidos/proyectos/enchogares/regulares/enigh/nc/2016/microdatos/enigh2016_ns_concentradohogar_csv.zip
-###El descriptor de archivos est· en http://www.beta.inegi.org.mx/contenidos/proyectos/enchogares/regulares/enigh/nc/2016/doc/702825091996.pdf
+###El descriptor de archivos est√° en http://www.beta.inegi.org.mx/contenidos/proyectos/enchogares/regulares/enigh/nc/2016/doc/702825091996.pdf
 
 library(tidyverse)
 
-##Cargar base de datos y hacer ajustes b·sicos a las variables
-##Nota: DejÈ mi ruta de usuario, no correr el cÛdigo hasta hacer ese ajuste
-conc_hogargto <- read.csv("C:/Users/Alex/Desktop/Propuesta DSRV/Archivos/Bases de datos/enigh/concentradohogar.csv", header=T)%>%
-rename(folioviv= "Ô..folioviv")%>% 
+##Cargar base de datos y hacer ajustes b√°sicos a las variables
+##Nota: Indicar ruta propia de usuario 
+conc_hogargto <- read.csv("ruta_del_usario/concentradohogar.csv", header=T)%>%
+rename(folioviv= "√Ø..folioviv")%>% 
 filter(str_detect(folioviv, "^11")) %>%
 select("folioviv", "tam_loc", "est_socio", "est_dis", "upm", 
 "factor", "sexo_jefe", "educa_jefe", "tot_integ", "percep_ing", 
@@ -16,26 +16,26 @@ select("folioviv", "tam_loc", "est_socio", "est_dis", "upm",
 "alimentos") %>%
 mutate(urb_rural=substr(folioviv, 3,3)) %>%	##El tercer caracter de la cadena define rural-urbano
 mutate(urb_rural=ifelse(urb_rural==6, "rural", "urbano"), 
-tam_loc=ifelse(tam_loc==1, "M·s de 100 mil habs.", ifelse(tam_loc==2, "De 15 a 99999 habs.", 
+tam_loc=ifelse(tam_loc==1, "M√°s de 100 mil habs.", ifelse(tam_loc==2, "De 15 a 99999 habs.", 
 ifelse(tam_loc==3, "2500 a 14999 habs.", "Menor a 2500 habs."))), 
 est_socio=ifelse(est_socio==1, "Bajo", ifelse(est_socio==2, "Medio bajo", 
 ifelse(est_socio==3, "Medio alto", "Alto"))), 
 sexo_jefe=(ifelse(sexo_jefe==1, "Hombre", "Mujer")))
 
 
-##An·lisis de encuesta utilizando survey
+##An√°lisis de encuesta utilizando survey
 library(survey)
 
-##Por tamaÒo de localidad
+##Por tama√±o de localidad
 enighgtoloc <- svydesign(ids=~est_dis+upm, strata=conc_hogargto$tam_loc, data = conc_hogargto, weights = conc_hogargto$factor)
 summary(enighgtoloc)
 
-##Crear variable "RazÛn de ingreso por remesas"
+##Crear variable "Raz√≥n de ingreso por remesas"
 enighgtoloc <- update(enighgtoloc, razoningrem = (remesas/ing_cor)*100)
-##Crear variable "RazÛn de ingreso por becas y beneficios gubernamentales
+##Crear variable "Raz√≥n de ingreso por becas y beneficios gubernamentales
 enighgtoloc <- update(enighgtoloc, razoningbecben = ((becas+bene_gob)/ing_cor)*100)
 
-##INGRESOS TRIMESTRALES POR REMESAS SEG⁄N TAMA—O DE LOCALIDAD
+##INGRESOS TRIMESTRALES POR REMESAS SEG√öN TAMA√ëO DE LOCALIDAD
 remesa <- subset(enighgtoloc, remesas>0)	##Creamos un subconjunto de variables que tengan valores de ingresos por remesas > 0
 
 ##Ingresos absolutos por remesas
@@ -45,15 +45,13 @@ svyby(~remesas,~tam_loc+sexo_jefe,design=remesa,svymean)
 ##Ingresos relativos por remesas (respecto al total de ingresos)
 svyby(~razoningrem,~tam_loc,design=remesa,svymean)
 svyby(~razoningrem,~tam_loc+sexo_jefe,design=remesa,svymean)
-##Las mujeres jefas de familia en localidades < 2500 hab dependen casi en 50% de las remesas
 
-##---RegresiÛn lineal---
+##---Regresi√≥n lineal---
 summary(svyglm(remesas~tam_loc+0, design=remesa))
 summary(svyglm(razoningrem~tam_loc+0, design=remesa))
-##Aunque quienes viven en localidades menores a 2500 reciben menos ingresos por remesas
-##(8700 pesos en promedio), esto representa la tercera parte de sus ingresos
 
-##Por ·mbito-rural urbano
+
+##Por √°mbito-rural urbano
 ##Pendiente
 enighgtourb <- svydesign(ids=~est_dis+upm, strata=conc_hogargto$urb_rural, data = conc_hogargto, weights = conc_hogargto$factor)
 summary(enighgtourb)
