@@ -47,4 +47,6 @@ gtomap <- subset(gto, select=c(longitud, latitud, nnivel)) %>%		#Latitud y longi
 	labs(x = "", y="") 
 gtomap
 
+#El mapa resultante es el archivo: photo_2018-05-19_19-04-40.jpg
+
 
