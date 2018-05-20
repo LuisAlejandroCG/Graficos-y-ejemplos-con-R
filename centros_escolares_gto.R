@@ -20,15 +20,15 @@ devtools::install_github("tidyverse/ggplot2")
 mapgto <- sf::read_sf("http://geoinfo.iplaneg.net/geoserver/wms/kml?layers=geonode%3Amgm_gto2010&mode=download", quiet=T)
 map <- data.frame(mapgto$geometry)
  
-
-##A fin de que los gráficos desplieguen en forma ascendente los niveles educativos, creamos el siguiente vector que se utilizará más adelante
+##A fin de que los gráficos desplieguen en forma ascendente los niveles educativos, creamos el siguiente vector 
 nivel_ed <- c("Primaria", "Secundaria", "Bachillerato", "Superior")
 
-gtomap <- subset(gto, select=c(longitud, latitud, nnivel)) %>%		#Latitud y longitud serán nuestros X y Y en el plot principal
+##Manipulación de la base de datos y creación del gráfico
+gtomap <- subset(gto, select=c(longitud, latitud, nnivel)) %>%  #Latitud y longitud serán nuestros X y Y en el plot principal
 	filter(nnivel%in%c("PRIMARIA", "SECUNDARIA", "BACHILLERATO", 
-	"PEDAGOGICA, UNIVERSITARIA O TECNOLOGICA", "PROFESIONAL")) %>%		#Seleccionamos los niveles educativos
+	"PEDAGOGICA, UNIVERSITARIA O TECNOLOGICA", "PROFESIONAL")) %>%	#Seleccionamos los niveles educativos
 	mutate(nnivel= case_when(nnivel== "PEDAGOGICA, UNIVERSITARIA O TECNOLOGICA" ~ "Superior",
-		nnivel=="PROFESIONAL" ~ "Superior", 	#Agrupamos las categorías en una sola y cambiamos el nombre
+		nnivel=="PROFESIONAL" ~ "Superior", 	#Agrupamos las categorías de "Superior" en una sola y cambiamos el nombre
 		nnivel=="SECUNDARIA" ~ "Secundaria",
 		nnivel=="PRIMARIA" ~ "Primaria",
 		nnivel=="BACHILLERATO" ~ "Bachillerato")) %>% 
@@ -39,7 +39,7 @@ gtomap <- subset(gto, select=c(longitud, latitud, nnivel)) %>%		#Latitud y longi
 	#Dado que "melt" crea la variable "value", la convertimos en factor y ordenamos los niveles educativos
 	ggplot(aes(x = longitud, y = latitud, col= value, shape=value)) +
 	geom_sf(data=map, inherit.aes=F) + 
-	#Con inherit.aes=F nos aseguramos que el mapa del estado se copie sin atributos aes
+	#Con inherit.aes=F nos aseguramos que el mapa del estado se copie sin atributos aes (es decir, X y Y)
 	geom_point() +
 	facet_wrap(~value) +
 	#Con esta instrucción, crearemos un mapa para cada nivel educativo
@@ -47,6 +47,7 @@ gtomap <- subset(gto, select=c(longitud, latitud, nnivel)) %>%		#Latitud y longi
 	labs(x = "", y="") 
 gtomap
 
-#El mapa resultante es el archivo: photo_2018-05-19_19-04-40.jpg
+#El mapa resultante es el archivo que se encuentra en:
+#https://github.com/LuisAlejandroCG/proyecto_gto/blob/master/photo_2018-05-19_19-04-40.jpg
 
 
