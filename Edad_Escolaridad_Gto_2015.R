@@ -39,6 +39,7 @@ edad_esc <- read.csv("TR_PERSONA11.CSV", header=T)%>%
 edad_esc
 
 ##Creación del gráfico
+##Nota: Se agregó una recta de regresión para observar el tipo de relación entre los datos
 muniescedad <- ggplot(edad_esc,aes(x=edad_promedio, y=promedio_esc)) + 
 	geom_point(size=1.5) + 
 	geom_smooth(method="lm", col="blue", se=F, size=0.8)+
