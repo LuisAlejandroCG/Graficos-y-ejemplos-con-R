@@ -23,11 +23,6 @@ str(zipgto)
 ##Con str() podemos observar los nombres de los archivos en el zip. Elegimos el archivo TR_PERSONA11.CSV
 ##Dado que el archivo queda alojado en el directorio de trabajo actual, no es necesario establecer una ruta con read.csv
 
-library(tidyverse)
-
-##Ajustamos opciones para desplegar resultados
-options(tibble.print_max = 100, tibble.print_min = 50, digits=5)
-
 ###Base de datos 
 base <- read.csv("TR_PERSONA11.CSV", header=T)%>%
 	rename_all(tolower) %>% 
