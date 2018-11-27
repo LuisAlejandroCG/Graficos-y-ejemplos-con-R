@@ -1,0 +1,40 @@
+## Creación de un buscador con OOP 
+
+## Descripción:
+## Sencillo buscador de información con programación orientada a objetos en R
+## Uso de las funciones "setClass" y "new"
+
+# 1. Cargamos una base de datos de prueba
+data(mtcars)
+
+# Para este ejemplo, crearemos una variable de nombres con los rownames de mtcars
+mtcars$nombres <- rownames(mtcars)
+
+# 2. Creamos nuestra clase llamada "cars"
+# Con "slots" definimos los nombres y las clases de los objetos
+# La clase determina los métodos aplicables 
+
+setClass("cars", 
+	slots=c("name"="character",
+	"hp"= "numeric",
+	"mpg"= "numeric",
+	"cyl"= "numeric")
+)
+
+# 3. Con nuestra clase definida, creamos un nuevo objeto de la clase "cars"
+# Para este ejemplo, nos valemos de las variables de la base de prueba
+
+cars <- new("cars", name= mtcars$nombres, hp=mtcars$hp, mpg= mtcars$mpg, cyl= mtcars$cyl)
+typeof(cars)	#S4
+
+# 4. Uso del buscador
+# Dado que con S4 podemos utilizar "@", el filtrado de casos resulta más sencillo
+# Por ejemplo, deseamos el nombre (name) para aquellas observaciones que cumplan:
+# Tener menos de 90, menos de 100 mpg y 4 cyl
+
+cars@name[cars@hp< 90 & cars@mpg<100 & cars@cyl==4]
+
+# Puesto que "hp" es numérica, podemos aplicar métodos para la clase "numeric"
+# Por ejemplo:
+
+mean(cars@hp[cars@hp< 90 & cars@mpg<100 & cars@cyl==4])
