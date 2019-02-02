@@ -1,0 +1,81 @@
+###########################################################################################
+### Mapa para observar la distribución del promedio de escolaridad entre padres e hijos ###
+###########################################################################################
+
+# Objetivos:
+# 1. Calcular el promedio de escolaridad para padres e hijos en el estado de Guanajuato con la Encuesta Intercensal 2015
+# 2. Mostrar en un mapa la distribución de dichos promedios
+
+# Librerías a utilizar
+library(tidyverse)
+library(sf)
+library(tmap)
+library(tmaptools)
+
+## Descargar archivo zip
+download.file("http://www.beta.inegi.org.mx/contenidos/proyectos/enchogares/especiales/intercensal/2015/microdatos/eic2015_11_csv.zip", "eic2015_11_csv.zip")
+zipgto <- unzip("eic2015_11_csv.zip")
+str(zipgto)
+##Con str() podemos observar los nombres de los archivos en el zip. Elegimos el archivo TR_PERSONA11.CSV
+##Dado que el archivo queda alojado en el directorio de trabajo actual, no es necesario establecer una ruta con read.csv
+
+## Cálculo de la escolaridad para padres 
+## (Nota: Para el cálculo se consideró como mínimo para la edad el primer cuartil (35 años))
+esc_padres <- read.csv("TR_PERSONA11.CSV", header=T)%>%
+	rename_all(tolower) %>% 
+	filter(parent==1 & cobertura%in%c(1,2) & escoacum!=99& edad%in%c(35:110)) %>%
+	subset(select=c("nom_mun", "factor", "escoacum"))%>%
+	rename(Municipio = nom_mun) %>%
+	group_by(Municipio)
+
+esc_padres_acum <- summarise(esc_padres, grado_educ= sum(escoacum*factor), personas=sum(factor), 
+	Escolaridad_Padres = grado_educ/personas)%>%
+	subset(select=c("Municipio", "Escolaridad_Padres")) 
+
+## Cálculo de la escolaridad para hijos
+## Se consideró como mínimo para la edad el primer cuartil (18 años)
+esc_hijos <- read.csv("TR_PERSONA11.CSV", header=T)%>%
+	rename_all(tolower) %>% 
+	filter(parent==3 & cobertura%in%c(1,2) & escoacum!=99& edad%in%c(18:110)) %>%
+	subset(select=c("nom_mun", "factor", "escoacum", "edad", "ingtrmen", "sexo", "nivacad"))%>%
+	mutate(sexo=ifelse(sexo==1, "Hombre", "Mujer"))%>%
+	rename(Municipio = nom_mun) %>%
+	group_by(Municipio)
+
+esc_hijos_acum <- summarise(esc_hijos, grado_educ= sum(escoacum*factor), personas=sum(factor), 
+	Escolaridad_Hijos = grado_educ/personas)%>%
+	subset(select=c("Municipio", "Escolaridad_Hijos")) 
+
+# Base de datos consolidada (conserva sólo las variables de interés) 
+base_mapa <-  mutate(esc_padres_acum, esc_hijos=esc_hijos_acum$Escolaridad_Hijos, 
+	razon_esc= (esc_hijos/Escolaridad_Padres), diff_esc=esc_hijos-Escolaridad_Padres) 
+
+# Para descargar el mapa, utilizamos la función read_sf de la librería sf
+mapgto <- read_sf("http://geoinfo.iplaneg.net/geoserver/wms/kml?layers=geonode%3Amgm_gto2010&mode=download") %>%
+  st_collection_extract("POLYGON")
+
+# Se observó que los nombres que forman parte del objeto sf no corresponden con los de la base de datos
+# En particular, existía discrepancia entre el nombre del municipio "Silao de la Victoria" 
+# Para extraer los nombres dentro de la referencia HTML de mapgto, utilizamos expresiones regulares
+
+# Primero, definimos el patrón de búsqueda
+pattern <- '(?<=NOM_MUN</span>:</strong> <span class=\\\"atr-value\\\">)(.+?)(?=</span>)'
+
+# Obtenemos los nombres que se encuentran dentro del patrón y los guardamos como parte del objeto sf
+mapgto$Municipio <- regmatches(mapgto$Description, regexpr(pattern, mapgto$Description, perl=TRUE))
+
+# Hacemos consistente el nombre del municipio "Silao de la Victoria" (es el único diferente respecto a base_mapa)
+mapgto$Municipio[mapgto$Municipio == 'Silao'] <- 'Silao de la Victoria'
+
+
+# Con append_data juntamos los objetos sf (mapagto) y data.frame (base_mapa) a través de una llave común ("Municipio")
+# Tras la creación del objeto, debe mostrarse el letrero "Keys match perfectly".
+# (De lo contrario, tendríamos inconsistencias en nombres y, aunque se muestre el mapa, desplegaría los datos de forma errónea)
+esc_map <- append_data(mapgto, base_mapa, key.shp = "Municipio", key.data = "Municipio")
+
+# Creamos el mapa con la función tm_shape
+# Con tm_polygons podemos graficar diversos mapas valiéndonos de la función c()
+tm_shape(esc_map) +
+	tm_polygons(c("Escolaridad_Padres", "esc_hijos"), id="Municipio", palette="Purples", 
+	title=c("Padres", "Hijos"), style="cont", n=3) +
+	tm_layout(main.title="Escolaridad padres-hijos, Guanajuato 2015")
