@@ -55,6 +55,9 @@ mapgto <- read_sf("http://geoinfo.iplaneg.net/geoserver/wms/kml?layers=geonode%3
   st_collection_extract("POLYGON")
 
 # Se observó que los nombres que forman parte del objeto sf no corresponden con los de la base de datos
+# Para determinar cuáles son los objetos diferentes entre dos vectores X y Y podemos emplear dos aproximaciones:
+# unique(Y[!Y %in% X]) o setdiff(Y,X)
+
 # En particular, existía discrepancia entre el nombre del municipio "Silao de la Victoria" 
 # Para extraer los nombres dentro de la referencia HTML de mapgto, utilizamos expresiones regulares
 
@@ -69,19 +72,19 @@ mapgto$Municipio[mapgto$Municipio == 'Silao'] <- 'Silao de la Victoria'
 
 
 # Con append_data juntamos los objetos sf (mapagto) y data.frame (base_mapa) a través de una llave común ("Municipio")
-# Tras la creación del objeto, debe mostrarse el letrero "Keys match perfectly".
+# Tras la creación del objeto, debe mostrarse en consola la leyenda "Keys match perfectly".
 # (De lo contrario, tendríamos inconsistencias en nombres y, aunque se muestre el mapa, desplegaría los datos de forma errónea)
 esc_map <- append_data(mapgto, base_mapa, key.shp = "Municipio", key.data = "Municipio")
 
-# Creamos el mapa con la función tm_shape y lo guardamos como "mapita" (formato png) en nuestro directorio de trabajo
-# (Para saber cuál es nuestro directorio de trabajo actual, tipeamos getwd() en consola)
-
+# Creamos el mapa con la función tm_shape
 # Con tm_polygons podemos graficar diversos mapas valiéndonos de la función c()
-mapita <- tm_shape(esc_map) +
+mapa_gto_esc <- tm_shape(esc_map) +
 	tm_polygons(c("Escolaridad_Padres", "esc_hijos"), id="Municipio", palette="Purples", 
 	title=c("Padres", "Hijos"), style="cont", n=3) +
 	tm_layout(main.title="Escolaridad padres-hijos, Guanajuato 2015")
 
-png(file="mapita.png", width=10, height=5, units="in", res=2000)
-mapita
-dev.off()
+# Guardamos el mapa en nuestro directorio de trabajo actual utilizando la función png
+# (Para saber la ubicación del directorio, tipeamos getwd() en consola)
+png(file="mapa_gto_esc.png", width=10, height=5, units="in", res=2000)
+mapa_gto_esc
+dev.off() 
