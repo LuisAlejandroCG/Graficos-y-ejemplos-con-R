@@ -1,0 +1,99 @@
+##########################################################
+## DESCARGA DE ARCHIVOS DE LA ENCUESTA INTERCENSAL 2015 ##
+##########################################################
+
+# Llbrerías a utilizar
+
+library(tidyverse)
+library(foreach)
+library(readr)
+
+# Notas preliminares
+
+# El uso de loops (iteraciones) con for es a veces inevitable
+# Ocurre sobre todo en situaciones donde las acciones son secuenciales (cada paso depende de los resultados de los pasos previos).
+
+# En R, para guardar resultados, las iteraciones tradicionales con for requieren inicializar y "llenar" contenedores 
+# (o, en su defecto, crear funciones). 
+# En otras palabras, una iteración con for sólo tiene efectos secundarios ("side effects") 
+# y no valores de retorno (elementos manipulables alojados en el entorno de trabajo).
+
+test_uno <- for (i in 1:15) {print(sprintf("Tengo %02d año(s)", i))}
+# La impresión se observa correctamente en consola, pero la estructura del objeto es NULL
+# En otras palabras, se aprecia el efecto secundario, pero no hay valor de retorno
+str(test_uno) 
+#NULL
+
+# La librería foreach nos permite crear loops con valores de retorno sin el uso explícito de contenedores
+test_dos <- foreach(i=1:15) %do% print(sprintf("Tengo %02d año(s)", i))
+# Además de la impresión en consola, podemos observar que el objeto test_dos sí tiene elementos
+str(test_dos)
+#List of 15
+
+####################################################
+# Descargando los datos de la Encuesta Intercensal #
+####################################################
+
+# Supongamos que queremos descargar la información para todos los estados de la Encuesta Intercensal 2015
+# Primero, observamos que el vínculo de la descarga tiene la siguiente estructura: 
+
+# https://www.inegi.org.mx/contenidos/programas/intercensal/2015/microdatos/eic2015_(digitos_del_01_al_32)_csv.zip
+
+# Para bajar los archivos y extraerlos emplearemos un loop tradicional (for) usando download.file(), sprintf() y unzip(). 
+# Los zip quedarán alojados en nuestro directorio de trabajo
+# Para ubicar dicho directorio, tipeamos getwd() en consola
+
+
+# 1. Bajar archivos
+# download.file tiene dos argumentos básicos: la URL y el archivo de destino. 
+# sprintf regresa un vector de caracteres que contiene una combinación de texto y valores de variables
+# Su primer argumento es un vector de caracteres de cadenas de formato
+# En este caso, la parte específica de la cadena que cambia en cada iteración es la indicada con %02d
+# (Para cada iteración, sprintf produce "01","02","03",...)
+# El segundo argumento se refiere al índice de iteración definido en for 
+# Para cada iteración, se guarda un zip distinto. En total, deben descargarse 32 archivos zip.
+# Los archivos que deberán crearse son: archivos01.zip, ..., archivos32.zip
+
+for (i in 1:32) { 
+    	download.file(sprintf("http://www.beta.inegi.org.mx/contenidos/programas/intercensal/2015/microdatos/eic2015_%02d_csv.zip", i), 
+	# Termina la URL desde la cual se establece la conexión
+    	sprintf("archivos%02d.zip", i)) 
+	# Se indica el archivo de destino 
+	# Puede usarse cualquier nombre siempre que tenga la estructura nombre%02.zip 
+}
+
+## 2. Unzippear
+# Para cada zip creado, se extraen los archivos
+for (i in 1:32) {
+    	unzip(sprintf("archivos%02d.zip", i))
+}
+
+# Finalmente, con foreach podemos integrar los archivos csv individuales en uno solo (base_eic).
+# En este caso, guardaremos los de nombre TR_PERSONA utilizando la función read_csv() de la librería readr. 
+# El segundo argumento de foreach indica que la combinación de archivos se hará por renglones 
+# (a fin de crear una data.frame que contenga a todos los estados). 
+# Con %do%, la instrucción es leer los csv indicados.
+
+# Leer y guardar archivos con foreach (sin paralelización)
+# Combinamos los archivos csv TR_PERSONA por renglones con rbind y lo guardamos en el archivo base_eic
+foreach (i=1:32, .combine=rbind) %do% {
+  read_csv(sprintf("TR_PERSONA%02d.csv", i))} -> base_eic
+
+##################################################################
+# OPCIÓN ALTERNATIVA CON PARALELIZACIÓN (uso de múltiples cores) #
+##################################################################
+
+# Para optimizar la descarga, es posible utilizar paralelización con %dopar%. 
+# Para ello, previamente instalamos la librería doParallel y fijamos el número de "cores" que utilizaremos:
+
+install.packages("doParallel")
+library(doParallel)
+
+cluster <- makeCluster(detectCores()-1, type="FORK") #Para no sobrecargar el sistema, utilizamos n-1 cores
+registerDoParallel(cluster)
+
+foreach (i=1:32, .combine=rbind) %dopar% {
+  read_csv(sprintf("TR_PERSONA%02d.csv", i))} -> base_eic
+
+# Después de descargar los archivos, cerramos el cluster
+stopCluster(cluster)
